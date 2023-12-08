@@ -76,7 +76,7 @@
 
 		];
 
-		fetch('https://api.thingspeak.com/channels/2378870/feeds.json?api_key=NI42B6XDSWEWS35I&results=10')
+		fetch('https://api.thingspeak.com/channels/2378870/feeds.json?api_key=NI42B6XDSWEWS35I&results=20')
 			.then(response => response.json())
 			.then((data) => {
 				data.feeds.map((data) => {
