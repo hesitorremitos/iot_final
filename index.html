@@ -1,0 +1,109 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Open Street Map</title>
+	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css"
+		integrity="sha256-kLaT2GOSpHechhsozzB+flnD+zUyjE2LlfWPgU04xyI=" crossorigin="" />
+	<script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"
+		integrity="sha256-WBkoXOwTeyKclOHuWtc+i2uENFpDZ9YPdf5Hf+D7ewM=" crossorigin=""></script>
+
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js"
+		type="text/javascript"></script>
+</head>
+
+<body>
+	<h1>Mapa en vivo</h1>
+	<div id="mi_mapa" style="width: 90%; height: 500px;"></div>
+	<h1>Ultimas 10 Posiciones registradas</h1>
+	<div id="historymap" style="width: 90%; height: 500px;"></div>
+	<script>
+		var latitud = -19.561974, longitud = -65.759354;
+		let map = L.map('mi_mapa').setView([latitud, longitud], 20);
+
+		L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+			attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+		}).addTo(map);
+
+		let marker = L.marker([latitud, longitud]).addTo(map).bindPopup("Zócalo de la Ciudad de México");
+
+		map.on('click', onMapClick);
+
+		function onMapClick(e) {
+			alert("Posición: " + e.latlng);
+		}
+
+		// Crea un arreglo para almacenar el historial de ubicaciones
+		let historial = [];
+
+		// Crea una línea poligonal para representar el historial de ubicaciones
+		let lineaHistorial = L.polyline([], { color: 'red' }).addTo(map);
+
+		// Actualiza la ubicación cada 5 segundos
+		setInterval(function () {
+			// Aquí debes obtener las nuevas coordenadas
+			// latitud = obtenerNuevaLatitud();
+			// longitud = obtenerNuevaLongitud();
+
+			// Añade las nuevas coordenadas al historial
+			historial.push([latitud, longitud]);
+
+			// Actualiza la posición del marcador y el centro del mapa
+			marker.setLatLng([latitud, longitud]);
+			map.setView([latitud, longitud], 20);
+
+			// Actualiza la línea poligonal con el nuevo historial de ubicaciones
+			lineaHistorial.setLatLngs(historial);
+		}, 3000);
+
+	</script>
+
+
+	<script>
+		fetch('https://api.thingspeak.com/channels/2378870/feeds.json?api_key=NI42B6XDSWEWS35I&results=2')
+			.then(response => response.json())
+			.then(data => console.log(data))
+			.catch(error => console.error('Error:', error));
+	</script>
+
+
+	<script>
+
+		let coordenadas = [
+
+		];
+
+		fetch('https://api.thingspeak.com/channels/2378870/feeds.json?api_key=NI42B6XDSWEWS35I&results=10')
+			.then(response => response.json())
+			.then((data) => {
+				data.feeds.map((data) => {
+					coordenadas.push([data.field1, data.field2])
+				})
+				let mapHistorial = L.map('historymap').setView(coordenadas[coordenadas.length - 1], 20);
+
+				L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+					attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+				}).addTo(mapHistorial);
+
+				data.feeds.forEach(coordenada => {
+					var fechaUTC = new Date(coordenada.created_at);
+					var opciones = { year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: 'numeric', second: 'numeric', timeZone: 'America/La_Paz' };
+					L.marker([coordenada.field1, coordenada.field2]).addTo(mapHistorial).bindPopup(new Intl.DateTimeFormat('es-BO', opciones).format(fechaUTC));
+				});
+
+				// Crea una línea poligonal para representar el historial de ubicaciones
+				L.polyline(coordenadas, { color: 'red' }).addTo(mapHistorial);
+
+			})
+			.catch(error => console.error('Error:', error));
+
+
+	</script>
+
+	<script src="webio_mqtt.js"></script>
+</body>
+
+</html>
