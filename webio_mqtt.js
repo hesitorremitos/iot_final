@@ -5,16 +5,10 @@ var hostname = "driver.cloudmqtt.com";
 var port = 38946;
 var clientId = "webio4mqttexample";
 clientId += new Date().getUTCMilliseconds();
-
 var username = "ewdpapwh";
 var password = "B4WTn_t0AJUN";
 var subscription = "hector/latitud";
 let subscription2 = "hector/longitud"
-
-var username = "hector";
-var password = "hero";
-var subscription = "hector/ldr";
-let publisher = "/hectorcc/led/status"
 
 mqttClient = new Paho.MQTT.Client(hostname, port, clientId);
 mqttClient.onMessageArrived = MessageArrived;
